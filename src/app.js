@@ -21,7 +21,6 @@ async function getMailData(mailbox) {
         console.log('filtering')
 
     let paymentMail = mails.filter(item => {
-        console.log(item);
         return item.headers 
         && item.headers.from 
         && item.headers.from.includes('Yandex.Money') 
@@ -30,7 +29,6 @@ async function getMailData(mailbox) {
     })[0]
 
     let returnMail = mails.filter(item => {
-        console.log(item);
         return item.headers 
         && item.headers.from 
         && item.headers.from.includes('Yandex.Money') 
@@ -58,7 +56,7 @@ async function getMailData(mailbox) {
     date = returnMail.text.slice(dateStartIndex, dateStartIndex+10+magic1);
     paymentStartIndex = returnMail.text.indexOf('Сумма возвратов: ');
     paymentEndIndex = returnMail.text.indexOf('\r\n', paymentStartIndex);
-    payment = returnMail.text.slice(paymentStartIndex, paymentEndIndex+magic2);
+    payment = returnMail.text.slice(paymentStartIndex, paymentEndIndex);
     countStartIndex = returnMail.text.indexOf('Число возвратов: ');
     countEndIndex = returnMail.text.indexOf('\r\n', countStartIndex);
     count = returnMail.text.slice(countStartIndex, countEndIndex);
