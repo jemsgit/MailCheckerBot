@@ -6,7 +6,7 @@ import Mailbox from './mailbox';
 
 function app() {
     let tgBot = new TgBot(config.tgBotToken, config.userId);
-    let mailbox = new Mailbox(config.emailLogin, config.emailPpassword)
+    let mailbox = new Mailbox(config.popHost, config.emailLogin, config.emailPassword)
     tgBot.start();
     sheduleAction(config.checkTime, async () => {
         let info = await getMailData(mailbox);
@@ -20,31 +20,52 @@ async function getMailData(mailbox) {
     let mails = await mailbox.readMails();
         console.log('filtering')
 
-        mails = mails.filter(item => {
-            console.log(item);
-            return item.headers 
-            && item.headers.from 
-            && item.headers.from.includes('Yandex.Money') 
-            && item.headers.subject 
-            && item.headers.subject.includes('РЕЕСТР ПЛАТЕЖЕЙ В')
-        })
+    let paymentMail = mails.filter(item => {
+        console.log(item);
+        return item.headers 
+        && item.headers.from 
+        && item.headers.from.includes('Yandex.Money') 
+        && item.headers.subject 
+        && item.headers.subject.includes('РЕЕСТР ПЛАТЕЖЕЙ В')
+    })[0]
 
-        return mails.length;
+    let returnMail = mails.filter(item => {
+        console.log(item);
+        return item.headers 
+        && item.headers.from 
+        && item.headers.from.includes('Yandex.Money') 
+        && item.headers.subject 
+        && item.headers.subject.includes('РЕЕСТР ВОЗВРАТОВ')
+    })[0]
 
-/*         if(mails[0]) {
-            let mailMarkup = mails[0].html;
-            let codePosition = mailMarkup.indexOf('<font size="6">') + 15;
-            let code = mailMarkup.slice(codePosition, codePosition + 6);
-            console.log(code);
-            if(code) {
-                let codeInput = await page.$('input[name=security_code]');
-                codeInput.type(code, { delay: 50 });
-                await page.waitFor(2000);
-                const submitButton = await page.$('form button');
-                await submitButton.click();
-                await page.waitFor(2000);
-            }
-        } */
+    let magic1 = ('Дата платежей: ').length;
+    let magic2 = ('RUB').length;
+
+    let dateStartIndex = paymentMail.text.indexOf('Дата платежей: ');
+    let date = paymentMail.text.slice(dateStartIndex, dateStartIndex+10+magic1);
+    let paymentStartIndex = paymentMail.text.indexOf('Сумма принятых платежей: ');
+    let paymentEndIndex = paymentMail.text.indexOf('RUB');
+    let payment = paymentMail.text.slice(paymentStartIndex, paymentEndIndex+magic2);
+    let countStartIndex = paymentMail.text.indexOf('Число платежей: ');
+    let countEndIndex = paymentMail.text.indexOf('\r\n', countStartIndex);
+    let count = paymentMail.text.slice(countStartIndex, countEndIndex);
+
+    let paymentResult = `${date}\r\n${payment}\r\n${count}`;
+
+    magic1 = ('Дата возвратов: ').length;
+
+    dateStartIndex = returnMail.text.indexOf('Дата возвратов: ');
+    date = returnMail.text.slice(dateStartIndex, dateStartIndex+10+magic1);
+    paymentStartIndex = returnMail.text.indexOf('Сумма возвратов: ');
+    paymentEndIndex = returnMail.text.indexOf('\r\n', paymentStartIndex);
+    payment = returnMail.text.slice(paymentStartIndex, paymentEndIndex+magic2);
+    countStartIndex = returnMail.text.indexOf('Число возвратов: ');
+    countEndIndex = returnMail.text.indexOf('\r\n', countStartIndex);
+    count = returnMail.text.slice(countStartIndex, countEndIndex);
+
+    let returnResult = `${date}\r\n${payment}\r\n${count}`;
+
+    return `${paymentResult}\r\n\r\n${returnResult}`;
 }
 
 app()

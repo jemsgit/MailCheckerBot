@@ -1,9 +1,9 @@
 import Client from 'node-poplib-gowhich';
 
 export default class MailBox {
-    constructor(login, password) {
+    constructor(hostname, login, password) {
         this.client = new Client.Client({
-            hostname: 'pop.yandex.ru',
+            hostname: hostname,
             port: 995,
             tls: true,
             mailparser: true,
