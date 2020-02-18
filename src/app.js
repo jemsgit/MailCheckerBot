@@ -14,7 +14,11 @@ function app() {
     });
 }
 
-
+function dateSorter(m1, m2) {
+    let d1 = (new Date(m1.date)).getTime();
+    let d2 = (new Date(m2.date)).getTime();
+    return d2 - d1;
+}
 
 async function getMailData(mailbox) {
     let mails = await mailbox.readMails();
@@ -26,7 +30,7 @@ async function getMailData(mailbox) {
         && item.headers.from.includes('Yandex.Money') 
         && item.headers.subject 
         && item.headers.subject.includes('РЕЕСТР ПЛАТЕЖЕЙ В')
-    })[0]
+    }).sort(dateSorter)[0];
 
     let returnMail = mails.filter(item => {
         return item.headers 
@@ -34,7 +38,7 @@ async function getMailData(mailbox) {
         && item.headers.from.includes('Yandex.Money') 
         && item.headers.subject 
         && item.headers.subject.includes('РЕЕСТР ВОЗВРАТОВ')
-    })[0]
+    }).sort(dateSorter)[0];
 
     let magic1 = ('Дата платежей: ').length;
     let magic2 = ('RUB').length;
